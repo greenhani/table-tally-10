@@ -1,0 +1,43 @@
+export type MenuCategory = 'appetizers' | 'mains' | 'desserts' | 'drinks';
+
+export interface MenuItem {
+  id: string;
+  name: string;
+  category: MenuCategory;
+  price: number;
+  description?: string;
+  available: boolean;
+  image?: string;
+}
+
+export type OrderStatus = 'pending' | 'in-progress' | 'completed' | 'cancelled';
+
+export interface OrderItem {
+  menuItem: MenuItem;
+  quantity: number;
+}
+
+export interface Order {
+  id: string;
+  tableNumber: number;
+  items: OrderItem[];
+  status: OrderStatus;
+  total: number;
+  createdAt: Date;
+  completedAt?: Date;
+}
+
+export interface Sale {
+  id: string;
+  orderId: string;
+  amount: number;
+  date: Date;
+  items: OrderItem[];
+}
+
+export interface SalesStats {
+  totalRevenue: number;
+  totalOrders: number;
+  averageOrderValue: number;
+  popularItems: { item: MenuItem; quantity: number }[];
+}
