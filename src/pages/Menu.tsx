@@ -1,11 +1,11 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { Plus, Search, Pencil, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { MenuItem, MenuCategory } from '@/types';
+import { MenuItem } from '@/types';
 import { store } from '@/lib/store';
 import { MenuItemDialog } from '@/components/menu/MenuItemDialog';
 import { toast } from 'sonner';
@@ -13,7 +13,7 @@ import { toast } from 'sonner';
 export default function Menu() {
   const [menuItems, setMenuItems] = useState<MenuItem[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
-  const [selectedCategory, setSelectedCategory] = useState<MenuCategory | 'all'>('all');
+  const [selectedCategory, setSelectedCategory] = useState<string>('all');
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingItem, setEditingItem] = useState<MenuItem | undefined>();
 
@@ -24,6 +24,11 @@ export default function Menu() {
   const loadMenuItems = () => {
     setMenuItems(store.getMenuItems());
   };
+
+  const categories = useMemo(() => {
+    const cats = Array.from(new Set(menuItems.map(item => item.category)));
+    return ['all', ...cats];
+  }, [menuItems]);
 
   const filteredItems = menuItems.filter((item) => {
     const matchesSearch = item.name.toLowerCase().includes(searchQuery.toLowerCase());
@@ -50,14 +55,6 @@ export default function Menu() {
     }
   };
 
-  const categories: Array<{ value: MenuCategory | 'all'; label: string }> = [
-    { value: 'all', label: 'All Items' },
-    { value: 'appetizers', label: 'Appetizers' },
-    { value: 'mains', label: 'Mains' },
-    { value: 'desserts', label: 'Desserts' },
-    { value: 'drinks', label: 'Drinks' },
-  ];
-
   return (
     <div className="container mx-auto p-6 space-y-6">
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
@@ -83,11 +80,11 @@ export default function Menu() {
         </div>
       </div>
 
-      <Tabs value={selectedCategory} onValueChange={(v) => setSelectedCategory(v as MenuCategory | 'all')}>
-        <TabsList className="grid grid-cols-5 w-full md:w-auto">
+      <Tabs value={selectedCategory} onValueChange={setSelectedCategory}>
+        <TabsList className="w-full justify-start overflow-x-auto">
           {categories.map((cat) => (
-            <TabsTrigger key={cat.value} value={cat.value}>
-              {cat.label}
+            <TabsTrigger key={cat} value={cat} className="capitalize">
+              {cat === 'all' ? 'All Items' : cat}
             </TabsTrigger>
           ))}
         </TabsList>
@@ -102,10 +99,26 @@ export default function Menu() {
           ) : (
             <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
               {filteredItems.map((item) => (
-                <Card key={item.id} className="shadow-lg hover:shadow-xl transition-all">
+                <Card key={item.id} className="shadow-lg hover:shadow-xl transition-all overflow-hidden">
+                  {item.image && (
+                    <div className="w-full h-48 overflow-hidden">
+                      <img
+                        src={item.image}
+                        alt={item.name}
+                        className="w-full h-full object-cover"
+                      />
+                    </div>
+                  )}
                   <CardHeader>
                     <div className="flex items-start justify-between">
-                      <CardTitle className="text-lg">{item.name}</CardTitle>
+                      <div>
+                        <CardTitle className="text-lg">{item.name}</CardTitle>
+                        {item.subCategory && (
+                          <Badge variant="secondary" className="mt-1">
+                            {item.subCategory}
+                          </Badge>
+                        )}
+                      </div>
                       <Badge variant={item.available ? 'default' : 'secondary'}>
                         {item.available ? 'Available' : 'Unavailable'}
                       </Badge>
@@ -117,7 +130,7 @@ export default function Menu() {
                     </div>
                     <div className="flex items-center justify-between">
                       <span className="text-2xl font-bold text-accent">
-                        ${item.price.toFixed(2)}
+                        PKR {item.price.toFixed(0)}
                       </span>
                       <div className="flex gap-2">
                         <Button

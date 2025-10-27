@@ -1,9 +1,11 @@
 export type MenuCategory = 'appetizers' | 'mains' | 'desserts' | 'drinks';
+export type OrderType = 'table' | 'takeaway' | 'delivery';
 
 export interface MenuItem {
   id: string;
   name: string;
-  category: MenuCategory;
+  category: string;
+  subCategory?: string;
   price: number;
   description?: string;
   available: boolean;
@@ -19,7 +21,8 @@ export interface OrderItem {
 
 export interface Order {
   id: string;
-  tableNumber: number;
+  orderType: OrderType;
+  tableNumber?: number;
   items: OrderItem[];
   status: OrderStatus;
   total: number;

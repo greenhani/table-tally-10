@@ -35,10 +35,10 @@ class Store {
     this.orders.push(order);
   }
 
-  updateOrder(id: string, updates: Partial<Order>): void {
-    const index = this.orders.findIndex(order => order.id === id);
+  updateOrder(order: Order): void {
+    const index = this.orders.findIndex((o) => o.id === order.id);
     if (index !== -1) {
-      this.orders[index] = { ...this.orders[index], ...updates };
+      this.orders[index] = order;
     }
   }
 
@@ -62,51 +62,78 @@ export const store = new Store();
 const sampleMenuItems: MenuItem[] = [
   {
     id: '1',
-    name: 'Caesar Salad',
-    category: 'appetizers',
-    price: 12.99,
-    description: 'Fresh romaine with parmesan and croutons',
+    name: 'Chicken Biryani',
+    category: 'Main Course',
+    subCategory: 'Rice',
+    price: 450,
+    description: 'Aromatic basmati rice with tender chicken',
     available: true,
+    image: 'https://images.unsplash.com/photo-1563379091339-03b21ab4a4f8?w=400',
   },
   {
     id: '2',
-    name: 'Grilled Salmon',
-    category: 'mains',
-    price: 24.99,
-    description: 'Atlantic salmon with seasonal vegetables',
+    name: 'Beef Karahi',
+    category: 'Main Course',
+    subCategory: 'Curry',
+    price: 850,
+    description: 'Traditional spicy beef curry',
     available: true,
+    image: 'https://images.unsplash.com/photo-1603894584373-5ac82b2ae398?w=400',
   },
   {
     id: '3',
-    name: 'Chocolate Lava Cake',
-    category: 'desserts',
-    price: 8.99,
-    description: 'Warm chocolate cake with vanilla ice cream',
+    name: 'Chicken Tikka',
+    category: 'Appetizers',
+    subCategory: 'Grilled',
+    price: 350,
+    description: 'Marinated grilled chicken pieces',
     available: true,
+    image: 'https://images.unsplash.com/photo-1599487488170-d11ec9c172f0?w=400',
   },
   {
     id: '4',
-    name: 'Craft Beer',
-    category: 'drinks',
-    price: 6.99,
-    description: 'Local brewery selection',
+    name: 'Samosa',
+    category: 'Appetizers',
+    subCategory: 'Fried',
+    price: 50,
+    description: 'Crispy pastry with spiced filling',
     available: true,
+    image: 'https://images.unsplash.com/photo-1601050690597-df0568f70950?w=400',
   },
   {
     id: '5',
-    name: 'Bruschetta',
-    category: 'appetizers',
-    price: 9.99,
-    description: 'Toasted bread with tomatoes and basil',
+    name: 'Gulab Jamun',
+    category: 'Desserts',
+    price: 150,
+    description: 'Sweet milk-solid dumplings',
     available: true,
+    image: 'https://images.unsplash.com/photo-1590301157890-4810ed352733?w=400',
   },
   {
     id: '6',
-    name: 'Ribeye Steak',
-    category: 'mains',
-    price: 32.99,
-    description: '12oz premium cut with garlic butter',
+    name: 'Kheer',
+    category: 'Desserts',
+    price: 180,
+    description: 'Rice pudding with cardamom',
     available: true,
+    image: 'https://images.unsplash.com/photo-1571506165871-ee72a35bc9d4?w=400',
+  },
+  {
+    id: '7',
+    name: 'Fresh Lime Soda',
+    category: 'Beverages',
+    price: 120,
+    available: true,
+    image: 'https://images.unsplash.com/photo-1556679343-c7306c1976bc?w=400',
+  },
+  {
+    id: '8',
+    name: 'Kashmiri Chai',
+    category: 'Beverages',
+    price: 100,
+    description: 'Pink tea with nuts',
+    available: true,
+    image: 'https://images.unsplash.com/photo-1564890369478-c89ca6d9cde9?w=400',
   },
 ];
 

@@ -33,10 +33,12 @@ import { toast } from 'sonner';
 
 const menuItemSchema = z.object({
   name: z.string().min(1, 'Name is required').max(100),
-  category: z.enum(['appetizers', 'mains', 'desserts', 'drinks']),
-  price: z.number().min(0.01, 'Price must be greater than 0'),
+  category: z.string().min(1, 'Category is required'),
+  subCategory: z.string().optional(),
+  price: z.number().min(1, 'Price must be greater than 0'),
   description: z.string().max(500).optional(),
   available: z.boolean(),
+  image: z.string().url().optional().or(z.literal('')),
 });
 
 type MenuItemFormValues = z.infer<typeof menuItemSchema>;
@@ -52,10 +54,12 @@ export function MenuItemDialog({ open, onClose, editItem }: MenuItemDialogProps)
     resolver: zodResolver(menuItemSchema),
     defaultValues: {
       name: '',
-      category: 'mains',
+      category: '',
+      subCategory: '',
       price: 0,
       description: '',
       available: true,
+      image: '',
     },
   });
 
@@ -64,17 +68,21 @@ export function MenuItemDialog({ open, onClose, editItem }: MenuItemDialogProps)
       form.reset({
         name: editItem.name,
         category: editItem.category,
+        subCategory: editItem.subCategory || '',
         price: editItem.price,
         description: editItem.description || '',
         available: editItem.available,
+        image: editItem.image || '',
       });
     } else {
       form.reset({
         name: '',
-        category: 'mains',
+        category: '',
+        subCategory: '',
         price: 0,
         description: '',
         available: true,
+        image: '',
       });
     }
   }, [editItem, form]);
@@ -88,9 +96,11 @@ export function MenuItemDialog({ open, onClose, editItem }: MenuItemDialogProps)
         id: crypto.randomUUID(),
         name: data.name,
         category: data.category,
+        subCategory: data.subCategory,
         price: data.price,
         description: data.description,
         available: data.available,
+        image: data.image,
       };
       store.addMenuItem(newItem);
       toast.success('Menu item added successfully');
@@ -129,19 +139,23 @@ export function MenuItemDialog({ open, onClose, editItem }: MenuItemDialogProps)
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Category</FormLabel>
-                  <Select onValueChange={field.onChange} value={field.value}>
-                    <FormControl>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select category" />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      <SelectItem value="appetizers">Appetizers</SelectItem>
-                      <SelectItem value="mains">Mains</SelectItem>
-                      <SelectItem value="desserts">Desserts</SelectItem>
-                      <SelectItem value="drinks">Drinks</SelectItem>
-                    </SelectContent>
-                  </Select>
+                  <FormControl>
+                    <Input placeholder="e.g., Appetizers, Main Course, Desserts" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="subCategory"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Sub Category (Optional)</FormLabel>
+                  <FormControl>
+                    <Input placeholder="e.g., Rice, Curry, Grilled" {...field} />
+                  </FormControl>
                   <FormMessage />
                 </FormItem>
               )}
@@ -152,16 +166,42 @@ export function MenuItemDialog({ open, onClose, editItem }: MenuItemDialogProps)
               name="price"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Price</FormLabel>
+                  <FormLabel>Price (PKR)</FormLabel>
                   <FormControl>
                     <Input
                       type="number"
-                      step="0.01"
-                      placeholder="0.00"
+                      step="1"
+                      placeholder="0"
                       {...field}
                       onChange={(e) => field.onChange(parseFloat(e.target.value))}
                     />
                   </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="image"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Image URL (Optional)</FormLabel>
+                  <FormControl>
+                    <Input placeholder="https://example.com/image.jpg" {...field} />
+                  </FormControl>
+                  {field.value && (
+                    <div className="mt-2">
+                      <img
+                        src={field.value}
+                        alt="Preview"
+                        className="w-32 h-32 object-cover rounded"
+                        onError={(e) => {
+                          e.currentTarget.src = 'https://via.placeholder.com/150';
+                        }}
+                      />
+                    </div>
+                  )}
                   <FormMessage />
                 </FormItem>
               )}

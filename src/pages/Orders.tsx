@@ -1,16 +1,24 @@
 import { useState, useEffect } from 'react';
-import { Plus } from 'lucide-react';
+import { Plus, MoreVertical, Check, X, Edit } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 import { Order, OrderStatus } from '@/types';
 import { store } from '@/lib/store';
-import { OrderDialog } from '@/components/orders/OrderDialog';
+import { OrderSheet } from '@/components/orders/OrderSheet';
 import { format } from 'date-fns';
+import { toast } from 'sonner';
 
 export default function Orders() {
   const [orders, setOrders] = useState<Order[]>([]);
-  const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [isSheetOpen, setIsSheetOpen] = useState(false);
+  const [selectedOrder, setSelectedOrder] = useState<Order | undefined>();
 
   useEffect(() => {
     loadOrders();
@@ -20,11 +28,36 @@ export default function Orders() {
     setOrders(store.getOrders());
   };
 
-  const handleDialogClose = (refresh?: boolean) => {
-    setIsDialogOpen(false);
+  const handleSheetClose = (refresh?: boolean) => {
+    setIsSheetOpen(false);
+    setSelectedOrder(undefined);
     if (refresh) {
       loadOrders();
     }
+  };
+
+  const handleCompleteOrder = (order: Order) => {
+    store.updateOrder({ ...order, status: 'completed' });
+    toast.success('Order marked as completed');
+    loadOrders();
+  };
+
+  const handleCancelOrder = (order: Order) => {
+    store.updateOrder({ ...order, status: 'cancelled' });
+    toast.success('Order cancelled');
+    loadOrders();
+  };
+
+  const handleModifyOrder = (order: Order) => {
+    setSelectedOrder(order);
+    setIsSheetOpen(true);
+  };
+
+  const getOrderTypeLabel = (order: Order) => {
+    if (order.orderType === 'table') {
+      return `Table ${order.tableNumber}`;
+    }
+    return order.orderType.charAt(0).toUpperCase() + order.orderType.slice(1);
   };
 
   const getStatusBadge = (status: OrderStatus) => {
@@ -45,7 +78,7 @@ export default function Orders() {
           <h1 className="text-3xl font-bold text-foreground mb-2">Orders</h1>
           <p className="text-muted-foreground">Manage customer orders</p>
         </div>
-        <Button onClick={() => setIsDialogOpen(true)} className="bg-accent hover:bg-accent/90">
+        <Button onClick={() => setIsSheetOpen(true)} className="bg-accent hover:bg-accent/90">
           <Plus className="h-4 w-4 mr-2" />
           New Order
         </Button>
@@ -55,7 +88,7 @@ export default function Orders() {
         <Card>
           <CardContent className="flex flex-col items-center justify-center py-12">
             <p className="text-muted-foreground mb-4">No orders yet</p>
-            <Button onClick={() => setIsDialogOpen(true)} className="bg-accent hover:bg-accent/90">
+            <Button onClick={() => setIsSheetOpen(true)} className="bg-accent hover:bg-accent/90">
               Create First Order
             </Button>
           </CardContent>
@@ -66,12 +99,41 @@ export default function Orders() {
             <Card key={order.id} className="shadow-lg hover:shadow-xl transition-all">
               <CardHeader>
                 <div className="flex items-start justify-between">
-                  <CardTitle className="text-lg">Table {order.tableNumber}</CardTitle>
-                  {getStatusBadge(order.status)}
+                  <div>
+                    <CardTitle className="text-lg">{getOrderTypeLabel(order)}</CardTitle>
+                    <p className="text-sm text-muted-foreground mt-1">
+                      {format(new Date(order.createdAt), 'MMM dd, yyyy h:mm a')}
+                    </p>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    {getStatusBadge(order.status)}
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button variant="ghost" size="icon" className="h-8 w-8">
+                          <MoreVertical className="h-4 w-4" />
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end">
+                        {order.status !== 'completed' && (
+                          <DropdownMenuItem onClick={() => handleCompleteOrder(order)}>
+                            <Check className="h-4 w-4 mr-2" />
+                            Complete
+                          </DropdownMenuItem>
+                        )}
+                        {order.status !== 'cancelled' && (
+                          <DropdownMenuItem onClick={() => handleCancelOrder(order)}>
+                            <X className="h-4 w-4 mr-2" />
+                            Cancel
+                          </DropdownMenuItem>
+                        )}
+                        <DropdownMenuItem onClick={() => handleModifyOrder(order)}>
+                          <Edit className="h-4 w-4 mr-2" />
+                          Modify
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  </div>
                 </div>
-                <p className="text-sm text-muted-foreground">
-                  {format(new Date(order.createdAt), 'MMM dd, yyyy h:mm a')}
-                </p>
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="space-y-2">
@@ -81,7 +143,7 @@ export default function Orders() {
                         {item.quantity}x {item.menuItem.name}
                       </span>
                       <span className="font-medium">
-                        ${(item.quantity * item.menuItem.price).toFixed(2)}
+                        PKR {(item.quantity * item.menuItem.price).toFixed(0)}
                       </span>
                     </div>
                   ))}
@@ -90,7 +152,7 @@ export default function Orders() {
                   <div className="flex justify-between items-center">
                     <span className="font-semibold">Total</span>
                     <span className="text-2xl font-bold text-accent">
-                      ${order.total.toFixed(2)}
+                      PKR {order.total.toFixed(0)}
                     </span>
                   </div>
                 </div>
@@ -100,7 +162,7 @@ export default function Orders() {
         </div>
       )}
 
-      <OrderDialog open={isDialogOpen} onClose={handleDialogClose} />
+      <OrderSheet open={isSheetOpen} onClose={handleSheetClose} order={selectedOrder} />
     </div>
   );
 }
