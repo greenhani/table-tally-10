@@ -10,6 +10,8 @@ export interface MenuItem {
   description?: string;
   available: boolean;
   image?: string;
+  isDeal?: boolean;
+  dealItems?: string[]; // IDs of items in the deal
 }
 
 export type OrderStatus = 'pending' | 'in-progress' | 'completed' | 'cancelled';
@@ -28,6 +30,7 @@ export interface Order {
   total: number;
   createdAt: Date;
   completedAt?: Date;
+  estimatedTime?: number; // in minutes
 }
 
 export interface Sale {

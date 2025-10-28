@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
@@ -50,6 +50,8 @@ interface MenuItemDialogProps {
 }
 
 export function MenuItemDialog({ open, onClose, editItem }: MenuItemDialogProps) {
+  const [imageMode, setImageMode] = useState<'url' | 'upload'>('url');
+  
   const form = useForm<MenuItemFormValues>({
     resolver: zodResolver(menuItemSchema),
     defaultValues: {
@@ -186,9 +188,44 @@ export function MenuItemDialog({ open, onClose, editItem }: MenuItemDialogProps)
               name="image"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Image URL (Optional)</FormLabel>
+                  <FormLabel>Image</FormLabel>
+                  <div className="flex gap-2 mb-2">
+                    <Button
+                      type="button"
+                      variant={imageMode === 'url' ? 'default' : 'outline'}
+                      size="sm"
+                      onClick={() => setImageMode('url')}
+                    >
+                      URL
+                    </Button>
+                    <Button
+                      type="button"
+                      variant={imageMode === 'upload' ? 'default' : 'outline'}
+                      size="sm"
+                      onClick={() => setImageMode('upload')}
+                    >
+                      Upload
+                    </Button>
+                  </div>
                   <FormControl>
-                    <Input placeholder="https://example.com/image.jpg" {...field} />
+                    {imageMode === 'url' ? (
+                      <Input placeholder="https://example.com/image.jpg" {...field} />
+                    ) : (
+                      <Input
+                        type="file"
+                        accept="image/*"
+                        onChange={(e) => {
+                          const file = e.target.files?.[0];
+                          if (file) {
+                            const reader = new FileReader();
+                            reader.onloadend = () => {
+                              field.onChange(reader.result as string);
+                            };
+                            reader.readAsDataURL(file);
+                          }
+                        }}
+                      />
+                    )}
                   </FormControl>
                   {field.value && (
                     <div className="mt-2">

@@ -30,6 +30,7 @@ export function OrderSheet({ open, onClose, order }: OrderSheetProps) {
   const [menuItems, setMenuItems] = useState<MenuItem[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
+  const [estimatedTime, setEstimatedTime] = useState<number>(30);
 
   useEffect(() => {
     if (open) {
@@ -38,10 +39,12 @@ export function OrderSheet({ open, onClose, order }: OrderSheetProps) {
         setSelectedItems(order.items);
         setOrderType(order.orderType);
         setTableNumber(order.tableNumber || 1);
+        setEstimatedTime(order.estimatedTime || 30);
       } else {
         setSelectedItems([]);
         setOrderType('table');
         setTableNumber(1);
+        setEstimatedTime(30);
       }
       setSearchQuery('');
       setSelectedCategory('all');
@@ -120,6 +123,7 @@ export function OrderSheet({ open, onClose, order }: OrderSheetProps) {
         ...order,
         items: selectedItems,
         total: calculateTotal(),
+        estimatedTime,
       };
       store.updateOrder(updatedOrder);
       toast.success('Order updated successfully');
@@ -133,18 +137,10 @@ export function OrderSheet({ open, onClose, order }: OrderSheetProps) {
         status: 'pending',
         total: calculateTotal(),
         createdAt: new Date(),
+        estimatedTime,
       };
 
       store.addOrder(newOrder);
-      
-      store.addSale({
-        id: crypto.randomUUID(),
-        orderId: newOrder.id,
-        amount: newOrder.total,
-        date: new Date(),
-        items: selectedItems,
-      });
-
       toast.success('Order created successfully');
     }
     
@@ -207,6 +203,18 @@ export function OrderSheet({ open, onClose, order }: OrderSheetProps) {
               />
             </div>
           )}
+
+          <div>
+            <Label htmlFor="estimatedTime">Estimated Time (minutes)</Label>
+            <Input
+              id="estimatedTime"
+              type="number"
+              min="1"
+              value={estimatedTime}
+              onChange={(e) => setEstimatedTime(parseInt(e.target.value))}
+              className="mt-1"
+            />
+          </div>
 
           <div>
             <Label className="mb-2 block">Search Items</Label>

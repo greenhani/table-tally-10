@@ -1,17 +1,8 @@
-import { Home, UtensilsCrossed, ShoppingCart, TrendingUp, Menu } from 'lucide-react';
-import { NavLink } from 'react-router-dom';
-import {
-  Sidebar,
-  SidebarContent,
-  SidebarGroup,
-  SidebarGroupContent,
-  SidebarGroupLabel,
-  SidebarMenu,
-  SidebarMenuButton,
-  SidebarMenuItem,
-  SidebarTrigger,
-  SidebarHeader,
-} from '@/components/ui/sidebar';
+import { Home, UtensilsCrossed, ShoppingCart, TrendingUp, LogOut } from 'lucide-react';
+import { NavLink, useNavigate } from 'react-router-dom';
+import { useAuth } from '@/contexts/AuthContext';
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
+import { Button } from '@/components/ui/button';
 
 const menuItems = [
   { title: 'Dashboard', url: '/', icon: Home },
@@ -21,50 +12,70 @@ const menuItems = [
 ];
 
 export function AppSidebar() {
-  return (
-    <Sidebar className="border-r border-sidebar-border">
-      <SidebarHeader className="border-b border-sidebar-border p-4">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-sidebar-primary">
-              <Menu className="h-4 w-4 text-sidebar-primary-foreground" />
-            </div>
-            <div>
-              <h2 className="text-sm font-semibold text-sidebar-foreground">RestaurantPOS</h2>
-              <p className="text-xs text-sidebar-foreground/60">Management System</p>
-            </div>
-          </div>
-          <SidebarTrigger />
-        </div>
-      </SidebarHeader>
+  const { logout } = useAuth();
+  const navigate = useNavigate();
 
-      <SidebarContent>
-        <SidebarGroup>
-          <SidebarGroupLabel>Navigation</SidebarGroupLabel>
-          <SidebarGroupContent>
-            <SidebarMenu>
-              {menuItems.map((item) => (
-                <SidebarMenuItem key={item.title}>
-                  <SidebarMenuButton asChild>
-                    <NavLink
-                      to={item.url}
-                      end
-                      className={({ isActive }) =>
-                        isActive
-                          ? 'bg-sidebar-accent text-sidebar-accent-foreground'
-                          : 'hover:bg-sidebar-accent/50'
-                      }
-                    >
-                      <item.icon className="h-4 w-4" />
-                      <span>{item.title}</span>
-                    </NavLink>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
-              ))}
-            </SidebarMenu>
-          </SidebarGroupContent>
-        </SidebarGroup>
-      </SidebarContent>
-    </Sidebar>
+  const handleLogout = () => {
+    logout();
+    navigate('/login');
+  };
+
+  return (
+    <div className="w-18 h-screen bg-card border-r border-border flex flex-col items-center py-6 gap-4">
+      {/* App Logo */}
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-accent via-accent to-accent/80 flex items-center justify-center shadow-lg mb-4 cursor-pointer">
+            <span className="text-lg font-bold text-accent-foreground">SRG</span>
+          </div>
+        </TooltipTrigger>
+        <TooltipContent side="right">
+          <p className="font-semibold">SetRestGo</p>
+        </TooltipContent>
+      </Tooltip>
+
+      {/* Navigation Items */}
+      <nav className="flex-1 flex flex-col gap-2 w-full items-center">
+        {menuItems.map((item) => (
+          <Tooltip key={item.title}>
+            <TooltipTrigger asChild>
+              <NavLink
+                to={item.url}
+                end
+                className={({ isActive }) =>
+                  `w-12 h-12 rounded-xl flex items-center justify-center transition-all ${
+                    isActive
+                      ? 'bg-accent text-accent-foreground shadow-md'
+                      : 'text-muted-foreground hover:bg-accent/10 hover:text-foreground'
+                  }`
+                }
+              >
+                <item.icon className="h-5 w-5" />
+              </NavLink>
+            </TooltipTrigger>
+            <TooltipContent side="right">
+              <p>{item.title}</p>
+            </TooltipContent>
+          </Tooltip>
+        ))}
+      </nav>
+
+      {/* Logout Button */}
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={handleLogout}
+            className="w-12 h-12 rounded-xl text-muted-foreground hover:bg-destructive/10 hover:text-destructive"
+          >
+            <LogOut className="h-5 w-5" />
+          </Button>
+        </TooltipTrigger>
+        <TooltipContent side="right">
+          <p>Logout</p>
+        </TooltipContent>
+      </Tooltip>
+    </div>
   );
 }
