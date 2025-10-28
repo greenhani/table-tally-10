@@ -41,9 +41,9 @@ export function AppSidebar() {
             <TooltipTrigger asChild>
               <NavLink
                 to={item.url}
-                end
+                end={item.url === '/'}
                 className={({ isActive }) =>
-                  `w-12 h-12 rounded-xl flex items-center justify-center transition-all ${
+                  `w-12 h-12 rounded-xl flex items-center justify-center transition-all cursor-pointer ${
                     isActive
                       ? 'bg-accent text-accent-foreground shadow-md'
                       : 'text-muted-foreground hover:bg-accent/10 hover:text-foreground'
