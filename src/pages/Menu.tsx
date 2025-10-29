@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo } from 'react';
-import { Plus, Search, Pencil, Trash2 } from 'lucide-react';
+import { Plus, Search, Pencil, Trash2, Sparkles } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -7,14 +7,16 @@ import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { MenuItem } from '@/types';
 import { store } from '@/lib/store';
-import { MenuItemDialog } from '@/components/menu/MenuItemDialog';
+import { MenuItemSheet } from '@/components/menu/MenuItemSheet';
+import { DealsSheet } from '@/components/menu/DealsSheet';
 import { toast } from 'sonner';
 
 export default function Menu() {
   const [menuItems, setMenuItems] = useState<MenuItem[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
-  const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [isSheetOpen, setIsSheetOpen] = useState(false);
+  const [isDealsSheetOpen, setIsDealsSheetOpen] = useState(false);
   const [editingItem, setEditingItem] = useState<MenuItem | undefined>();
 
   useEffect(() => {
@@ -27,7 +29,7 @@ export default function Menu() {
 
   const categories = useMemo(() => {
     const cats = Array.from(new Set(menuItems.map(item => item.category)));
-    return ['all', ...cats];
+    return ['all', ...cats.filter(cat => cat !== 'deals'), 'deals'];
   }, [menuItems]);
 
   const filteredItems = menuItems.filter((item) => {
@@ -44,12 +46,19 @@ export default function Menu() {
 
   const handleEdit = (item: MenuItem) => {
     setEditingItem(item);
-    setIsDialogOpen(true);
+    setIsSheetOpen(true);
   };
 
-  const handleDialogClose = (refresh?: boolean) => {
-    setIsDialogOpen(false);
+  const handleSheetClose = (refresh?: boolean) => {
+    setIsSheetOpen(false);
     setEditingItem(undefined);
+    if (refresh) {
+      loadMenuItems();
+    }
+  };
+
+  const handleDealsSheetClose = (refresh?: boolean) => {
+    setIsDealsSheetOpen(false);
     if (refresh) {
       loadMenuItems();
     }
@@ -60,12 +69,18 @@ export default function Menu() {
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
         <div>
           <h1 className="text-3xl font-bold text-foreground mb-2">Menu Management</h1>
-          <p className="text-muted-foreground">Manage your restaurant menu items</p>
+          <p className="text-muted-foreground">Manage your restaurant menu items and deals</p>
         </div>
-        <Button onClick={() => setIsDialogOpen(true)} className="bg-accent hover:bg-accent/90">
-          <Plus className="h-4 w-4 mr-2" />
-          Add Menu Item
-        </Button>
+        <div className="flex gap-3">
+          <Button onClick={() => setIsDealsSheetOpen(true)} variant="outline" className="border-accent text-accent hover:bg-accent hover:text-white">
+            <Sparkles className="h-4 w-4 mr-2" />
+            Add Deal
+          </Button>
+          <Button onClick={() => setIsSheetOpen(true)} className="bg-accent hover:bg-accent/90">
+            <Plus className="h-4 w-4 mr-2" />
+            Add Menu Item
+          </Button>
+        </div>
       </div>
 
       <div className="flex flex-col md:flex-row gap-4">
@@ -93,15 +108,25 @@ export default function Menu() {
           {filteredItems.length === 0 ? (
             <Card>
               <CardContent className="flex flex-col items-center justify-center py-12">
-                <p className="text-muted-foreground">No menu items found</p>
+                <p className="text-muted-foreground">
+                  {selectedCategory === 'deals' ? 'No deals created yet. Click "Add Deal" to create one.' : 'No menu items found'}
+                </p>
               </CardContent>
             </Card>
           ) : (
             <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
               {filteredItems.map((item) => (
                 <Card key={item.id} className="shadow-lg hover:shadow-xl transition-all overflow-hidden">
+                  {item.isDeal && (
+                    <div className="absolute top-3 right-3 z-10">
+                      <Badge className="bg-accent text-white shadow-lg">
+                        <Sparkles className="h-3 w-3 mr-1" />
+                        Deal
+                      </Badge>
+                    </div>
+                  )}
                   {item.image && (
-                    <div className="w-full h-48 overflow-hidden">
+                    <div className="w-full h-48 overflow-hidden relative">
                       <img
                         src={item.image}
                         alt={item.name}
@@ -111,12 +136,17 @@ export default function Menu() {
                   )}
                   <CardHeader>
                     <div className="flex items-start justify-between">
-                      <div>
+                      <div className="flex-1">
                         <CardTitle className="text-lg">{item.name}</CardTitle>
                         {item.subCategory && (
                           <Badge variant="secondary" className="mt-1">
                             {item.subCategory}
                           </Badge>
+                        )}
+                        {item.isDeal && item.dealItems && (
+                          <p className="text-xs text-muted-foreground mt-2">
+                            {item.dealItems.length} items included
+                          </p>
                         )}
                       </div>
                       <Badge variant={item.available ? 'default' : 'secondary'}>
@@ -133,13 +163,15 @@ export default function Menu() {
                         PKR {item.price.toFixed(0)}
                       </span>
                       <div className="flex gap-2">
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          onClick={() => handleEdit(item)}
-                        >
-                          <Pencil className="h-4 w-4" />
-                        </Button>
+                        {!item.isDeal && (
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => handleEdit(item)}
+                          >
+                            <Pencil className="h-4 w-4" />
+                          </Button>
+                        )}
                         <Button
                           size="sm"
                           variant="destructive"
@@ -157,10 +189,16 @@ export default function Menu() {
         </TabsContent>
       </Tabs>
 
-      <MenuItemDialog
-        open={isDialogOpen}
-        onClose={handleDialogClose}
+      <MenuItemSheet
+        open={isSheetOpen}
+        onClose={handleSheetClose}
         editItem={editingItem}
+      />
+
+      <DealsSheet
+        open={isDealsSheetOpen}
+        onClose={handleDealsSheetClose}
+        menuItems={menuItems}
       />
     </div>
   );

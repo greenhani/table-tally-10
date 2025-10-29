@@ -89,59 +89,62 @@ export default function Dashboard() {
         </Card>
       </div>
 
-      {/* Sales Graph */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Sales Trend (Last 7 Days)</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <ResponsiveContainer width="100%" height={300}>
-            <LineChart data={chartData}>
-              <CartesianGrid strokeDasharray="3 3" />
-              <XAxis dataKey="date" />
-              <YAxis />
-              <Tooltip />
-              <Line type="monotone" dataKey="revenue" stroke="hsl(var(--accent))" strokeWidth={2} />
-            </LineChart>
-          </ResponsiveContainer>
-        </CardContent>
-      </Card>
+      {/* Sales Graph and Recent Orders - Side by Side on Large Screens */}
+      <div className="grid gap-6 lg:grid-cols-2">
+        {/* Sales Graph */}
+        <Card>
+          <CardHeader>
+            <CardTitle>Sales Trend (Last 7 Days)</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <ResponsiveContainer width="100%" height={300}>
+              <LineChart data={chartData}>
+                <CartesianGrid strokeDasharray="3 3" />
+                <XAxis dataKey="date" />
+                <YAxis />
+                <Tooltip />
+                <Line type="monotone" dataKey="revenue" stroke="hsl(var(--accent))" strokeWidth={2} />
+              </LineChart>
+            </ResponsiveContainer>
+          </CardContent>
+        </Card>
 
-      {/* Recent Orders */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Recent Orders</CardTitle>
-        </CardHeader>
-        <CardContent>
-          {recentOrders.length === 0 ? (
-            <p className="text-muted-foreground text-center py-8">No orders yet</p>
-          ) : (
-            <div className="space-y-4">
-              {recentOrders.map((order) => (
-                <div
-                  key={order.id}
-                  className="flex items-center justify-between p-4 rounded-lg border hover:bg-accent/5 transition-colors"
-                >
-                  <div>
-                    <p className="font-medium">
-                      {order.orderType === 'table'
-                        ? `Table ${order.tableNumber}`
-                        : order.orderType.charAt(0).toUpperCase() + order.orderType.slice(1)}
-                    </p>
-                    <p className="text-sm text-muted-foreground">
-                      {format(new Date(order.createdAt), 'MMM dd, yyyy h:mm a')}
-                    </p>
+        {/* Recent Orders */}
+        <Card>
+          <CardHeader>
+            <CardTitle>Recent Orders</CardTitle>
+          </CardHeader>
+          <CardContent>
+            {recentOrders.length === 0 ? (
+              <p className="text-muted-foreground text-center py-8">No orders yet</p>
+            ) : (
+              <div className="space-y-4">
+                {recentOrders.map((order) => (
+                  <div
+                    key={order.id}
+                    className="flex items-center justify-between p-4 rounded-lg border hover:bg-accent/5 transition-colors"
+                  >
+                    <div>
+                      <p className="font-medium">
+                        {order.orderType === 'table'
+                          ? `Table ${order.tableNumber}`
+                          : order.orderType.charAt(0).toUpperCase() + order.orderType.slice(1)}
+                      </p>
+                      <p className="text-sm text-muted-foreground">
+                        {format(new Date(order.createdAt), 'MMM dd, yyyy h:mm a')}
+                      </p>
+                    </div>
+                    <div className="text-right">
+                      <p className="font-bold text-accent">PKR {order.total.toFixed(0)}</p>
+                      <p className="text-sm text-muted-foreground capitalize">{order.status}</p>
+                    </div>
                   </div>
-                  <div className="text-right">
-                    <p className="font-bold text-accent">PKR {order.total.toFixed(0)}</p>
-                    <p className="text-sm text-muted-foreground capitalize">{order.status}</p>
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
-        </CardContent>
-      </Card>
+                ))}
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      </div>
 
       <OrderSheet open={isSheetOpen} onClose={handleSheetClose} />
     </div>
