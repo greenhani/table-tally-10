@@ -19,6 +19,7 @@ import { useWindowSize } from '@/hooks/useWindowSize';
 
 export default function Orders() {
   const [orders, setOrders] = useState<Order[]>([]);
+  const [completedOrders, setCompletedOrders] = useState<Order[]>([]);
   const [isSheetOpen, setIsSheetOpen] = useState(false);
   const [selectedOrder, setSelectedOrder] = useState<Order | undefined>();
   const [showConfetti, setShowConfetti] = useState(false);
@@ -33,7 +34,9 @@ export default function Orders() {
   }, []);
 
   const loadOrders = () => {
-    setOrders(store.getOrders().filter(o => o.status !== 'completed'));
+    const allOrders = store.getOrders();
+    setOrders(allOrders.filter(o => o.status !== 'completed' && o.status !== 'cancelled'));
+    setCompletedOrders(allOrders.filter(o => o.status === 'completed').slice(0, 10));
   };
 
   const handleSheetClose = (refresh?: boolean) => {
@@ -121,16 +124,17 @@ export default function Orders() {
           </Button>
         </div>
 
-        {orders.length === 0 ? (
-          <Card>
-            <CardContent className="flex flex-col items-center justify-center py-12">
-              <p className="text-muted-foreground mb-4">No active orders</p>
-              <Button onClick={() => setIsSheetOpen(true)} className="bg-accent hover:bg-accent/90">
-                Create First Order
-              </Button>
-            </CardContent>
-          </Card>
-        ) : (
+        <div className="space-y-6">
+          {orders.length === 0 ? (
+            <Card>
+              <CardContent className="flex flex-col items-center justify-center py-12">
+                <p className="text-muted-foreground mb-4">No active orders</p>
+                <Button onClick={() => setIsSheetOpen(true)} className="bg-accent hover:bg-accent/90">
+                  Create First Order
+                </Button>
+              </CardContent>
+            </Card>
+          ) : (
           <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
             {orders.map((order) => {
               const remaining = getRemainingTime(order);
@@ -220,7 +224,61 @@ export default function Orders() {
               );
             })}
           </div>
-        )}
+          )}
+
+          {/* Order History Section */}
+          {completedOrders.length > 0 && (
+            <div className="mt-12">
+              <h2 className="text-2xl font-bold text-foreground mb-4">Order History</h2>
+              <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+                {completedOrders.map((order) => (
+                  <Card key={order.id} className="opacity-75 hover:opacity-100 transition-opacity">
+                    <CardHeader>
+                      <div className="flex items-start justify-between">
+                        <div>
+                          <CardTitle className="text-base">{getOrderTypeLabel(order)}</CardTitle>
+                          <p className="text-xs text-muted-foreground mt-1">
+                            {format(new Date(order.createdAt), 'MMM dd, yyyy h:mm a')}
+                          </p>
+                          {order.completedAt && (
+                            <p className="text-xs text-muted-foreground">
+                              Completed: {format(new Date(order.completedAt), 'h:mm a')}
+                            </p>
+                          )}
+                        </div>
+                        <Badge variant="default">Completed</Badge>
+                      </div>
+                    </CardHeader>
+                    <CardContent className="space-y-3">
+                      <div className="space-y-1">
+                        {order.items.slice(0, 3).map((item, idx) => (
+                          <div key={idx} className="flex justify-between text-sm">
+                            <span className="text-muted-foreground">
+                              {item.quantity}x {item.menuItem.name}
+                            </span>
+                          </div>
+                        ))}
+                        {order.items.length > 3 && (
+                          <p className="text-xs text-muted-foreground">
+                            +{order.items.length - 3} more items
+                          </p>
+                        )}
+                      </div>
+                      <div className="pt-2 border-t">
+                        <div className="flex justify-between items-center">
+                          <span className="text-sm font-medium">Total</span>
+                          <span className="text-lg font-bold text-accent">
+                            PKR {order.total.toFixed(0)}
+                          </span>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
 
         <OrderSheet open={isSheetOpen} onClose={handleSheetClose} order={selectedOrder} />
       </div>

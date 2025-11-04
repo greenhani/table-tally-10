@@ -3,6 +3,7 @@ import { NavLink, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { Button } from '@/components/ui/button';
+import logo from '@/assets/logo.png';
 
 const menuItems = [
   { title: 'Dashboard', url: '/', icon: Home },
@@ -23,8 +24,8 @@ export function AppSidebar() {
   return (
     <div className="w-24 h-screen bg-card border-r border-border flex flex-col items-center py-8 gap-6">
       {/* App Logo */}
-      <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-accent via-accent to-accent/80 flex items-center justify-center shadow-lg mb-4 cursor-pointer">
-        <span className="text-2xl font-bold text-accent-foreground">SRG</span>
+      <div className="w-16 h-16 rounded-2xl flex items-center justify-center mb-4 cursor-pointer">
+        <img src={logo} alt="SRG Logo" className="w-full h-full object-contain" />
       </div>
 
       {/* Navigation Items */}
