@@ -28,9 +28,14 @@ export interface Order {
   items: OrderItem[];
   status: OrderStatus;
   total: number;
+  subtotal?: number;
+  discount?: number; // percentage
   createdAt: Date;
   completedAt?: Date;
   estimatedTime?: number; // in minutes
+  customerName?: string;
+  customerContact?: string;
+  deliveryAddress?: string;
 }
 
 export interface Sale {

@@ -114,19 +114,19 @@ export default function Menu() {
               </CardContent>
             </Card>
           ) : (
-            <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+            <div className="grid gap-4 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
               {filteredItems.map((item) => (
-                <Card key={item.id} className="shadow-lg hover:shadow-xl transition-all overflow-hidden">
+                <Card key={item.id} className="shadow-md hover:shadow-lg transition-all overflow-hidden">
                   {item.isDeal && (
-                    <div className="absolute top-3 right-3 z-10">
-                      <Badge className="bg-accent text-white shadow-lg">
+                    <div className="absolute top-2 right-2 z-10">
+                      <Badge className="bg-accent text-white shadow-md text-xs px-2 py-0.5">
                         <Sparkles className="h-3 w-3 mr-1" />
                         Deal
                       </Badge>
                     </div>
                   )}
                   {item.image && (
-                    <div className="w-full h-48 overflow-hidden relative">
+                    <div className="w-full h-32 overflow-hidden relative">
                       <img
                         src={item.image}
                         alt={item.name}
@@ -134,50 +134,52 @@ export default function Menu() {
                       />
                     </div>
                   )}
-                  <CardHeader>
-                    <div className="flex items-start justify-between">
-                      <div className="flex-1">
-                        <CardTitle className="text-lg">{item.name}</CardTitle>
+                  <CardHeader className="p-3 pb-2">
+                    <div className="flex items-start justify-between gap-2">
+                      <div className="flex-1 min-w-0">
+                        <CardTitle className="text-sm font-semibold truncate">{item.name}</CardTitle>
                         {item.subCategory && (
-                          <Badge variant="secondary" className="mt-1">
+                          <Badge variant="secondary" className="mt-1 text-xs">
                             {item.subCategory}
                           </Badge>
                         )}
                         {item.isDeal && item.dealItems && (
-                          <p className="text-xs text-muted-foreground mt-2">
-                            {item.dealItems.length} items included
+                          <p className="text-xs text-muted-foreground mt-1">
+                            {item.dealItems.length} items
                           </p>
                         )}
                       </div>
-                      <Badge variant={item.available ? 'default' : 'secondary'}>
-                        {item.available ? 'Available' : 'Unavailable'}
+                      <Badge variant={item.available ? 'default' : 'secondary'} className="text-xs shrink-0">
+                        {item.available ? 'Available' : 'Out'}
                       </Badge>
                     </div>
                   </CardHeader>
-                  <CardContent className="space-y-4">
-                    <div>
-                      <p className="text-sm text-muted-foreground">{item.description}</p>
-                    </div>
+                  <CardContent className="p-3 pt-0 space-y-2">
+                    {item.description && (
+                      <p className="text-xs text-muted-foreground line-clamp-2">{item.description}</p>
+                    )}
                     <div className="flex items-center justify-between">
-                      <span className="text-2xl font-bold text-accent">
+                      <span className="text-lg font-bold text-accent">
                         PKR {item.price.toFixed(0)}
                       </span>
-                      <div className="flex gap-2">
+                      <div className="flex gap-1">
                         {!item.isDeal && (
                           <Button
                             size="sm"
                             variant="outline"
                             onClick={() => handleEdit(item)}
+                            className="h-7 w-7 p-0"
                           >
-                            <Pencil className="h-4 w-4" />
+                            <Pencil className="h-3 w-3" />
                           </Button>
                         )}
                         <Button
                           size="sm"
                           variant="destructive"
                           onClick={() => handleDelete(item.id)}
+                          className="h-7 w-7 p-0"
                         >
-                          <Trash2 className="h-4 w-4" />
+                          <Trash2 className="h-3 w-3" />
                         </Button>
                       </div>
                     </div>

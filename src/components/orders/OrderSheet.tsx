@@ -31,6 +31,10 @@ export function OrderSheet({ open, onClose, order }: OrderSheetProps) {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
   const [estimatedTime, setEstimatedTime] = useState<number>(30);
+  const [discount, setDiscount] = useState<number>(0);
+  const [customerName, setCustomerName] = useState<string>('');
+  const [customerContact, setCustomerContact] = useState<string>('');
+  const [deliveryAddress, setDeliveryAddress] = useState<string>('');
 
   useEffect(() => {
     if (open) {
@@ -40,11 +44,19 @@ export function OrderSheet({ open, onClose, order }: OrderSheetProps) {
         setOrderType(order.orderType);
         setTableNumber(order.tableNumber || 1);
         setEstimatedTime(order.estimatedTime || 30);
+        setDiscount(order.discount || 0);
+        setCustomerName(order.customerName || '');
+        setCustomerContact(order.customerContact || '');
+        setDeliveryAddress(order.deliveryAddress || '');
       } else {
         setSelectedItems([]);
         setOrderType('table');
         setTableNumber(1);
         setEstimatedTime(30);
+        setDiscount(0);
+        setCustomerName('');
+        setCustomerContact('');
+        setDeliveryAddress('');
       }
       setSearchQuery('');
       setSelectedCategory('all');
@@ -99,11 +111,17 @@ export function OrderSheet({ open, onClose, order }: OrderSheetProps) {
     setSelectedItems(selectedItems.filter((item) => item.menuItem.id !== menuItemId));
   };
 
-  const calculateTotal = () => {
+  const calculateSubtotal = () => {
     return selectedItems.reduce(
       (sum, item) => sum + item.menuItem.price * item.quantity,
       0
     );
+  };
+
+  const calculateTotal = () => {
+    const subtotal = calculateSubtotal();
+    const discountAmount = (subtotal * discount) / 100;
+    return subtotal - discountAmount;
   };
 
   const handleSubmit = () => {
@@ -117,13 +135,36 @@ export function OrderSheet({ open, onClose, order }: OrderSheetProps) {
       return;
     }
 
+    if ((orderType === 'takeaway' || orderType === 'delivery') && !customerName.trim()) {
+      toast.error('Please enter customer name');
+      return;
+    }
+
+    if ((orderType === 'takeaway' || orderType === 'delivery') && !customerContact.trim()) {
+      toast.error('Please enter customer contact');
+      return;
+    }
+
+    if (orderType === 'delivery' && !deliveryAddress.trim()) {
+      toast.error('Please enter delivery address');
+      return;
+    }
+
+    const subtotal = calculateSubtotal();
+    const total = calculateTotal();
+
     if (order) {
       // Update existing order
       const updatedOrder: Order = {
         ...order,
         items: selectedItems,
-        total: calculateTotal(),
+        subtotal,
+        discount,
+        total,
         estimatedTime,
+        customerName: orderType !== 'table' ? customerName : undefined,
+        customerContact: orderType !== 'table' ? customerContact : undefined,
+        deliveryAddress: orderType === 'delivery' ? deliveryAddress : undefined,
       };
       store.updateOrder(updatedOrder);
       toast.success('Order updated successfully');
@@ -135,9 +176,14 @@ export function OrderSheet({ open, onClose, order }: OrderSheetProps) {
         tableNumber: orderType === 'table' ? tableNumber : undefined,
         items: selectedItems,
         status: 'pending',
-        total: calculateTotal(),
+        subtotal,
+        discount,
+        total,
         createdAt: new Date(),
         estimatedTime,
+        customerName: orderType !== 'table' ? customerName : undefined,
+        customerContact: orderType !== 'table' ? customerContact : undefined,
+        deliveryAddress: orderType === 'delivery' ? deliveryAddress : undefined,
       };
 
       store.addOrder(newOrder);
@@ -190,31 +236,102 @@ export function OrderSheet({ open, onClose, order }: OrderSheetProps) {
             </RadioGroup>
           </div>
 
-          {orderType === 'table' && (
-            <div>
-              <Label htmlFor="tableNumber">Table Number</Label>
+          <div className="grid grid-cols-2 gap-4">
+            {orderType === 'table' && (
+              <div>
+                <Label htmlFor="tableNumber">Table Number</Label>
+                <Input
+                  id="tableNumber"
+                  type="number"
+                  min="1"
+                  value={tableNumber}
+                  onChange={(e) => setTableNumber(parseInt(e.target.value))}
+                  className="mt-1"
+                />
+              </div>
+            )}
+            
+            <div className={orderType === 'table' ? '' : 'col-span-2'}>
+              <Label htmlFor="estimatedTime">Estimated Time (minutes)</Label>
               <Input
-                id="tableNumber"
+                id="estimatedTime"
                 type="number"
                 min="1"
-                value={tableNumber}
-                onChange={(e) => setTableNumber(parseInt(e.target.value))}
+                value={estimatedTime}
+                onChange={(e) => setEstimatedTime(parseInt(e.target.value))}
                 className="mt-1"
               />
             </div>
-          )}
 
-          <div>
-            <Label htmlFor="estimatedTime">Estimated Time (minutes)</Label>
-            <Input
-              id="estimatedTime"
-              type="number"
-              min="1"
-              value={estimatedTime}
-              onChange={(e) => setEstimatedTime(parseInt(e.target.value))}
-              className="mt-1"
-            />
+            {orderType === 'table' && (
+              <div>
+                <Label htmlFor="discount">Discount (%)</Label>
+                <Input
+                  id="discount"
+                  type="number"
+                  min="0"
+                  max="100"
+                  value={discount}
+                  onChange={(e) => setDiscount(Math.min(100, Math.max(0, parseInt(e.target.value) || 0)))}
+                  className="mt-1"
+                />
+              </div>
+            )}
           </div>
+
+          {(orderType === 'takeaway' || orderType === 'delivery') && (
+            <div className="space-y-4 p-4 bg-secondary/50 rounded-lg">
+              <h4 className="font-medium text-sm">Customer Details</h4>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <Label htmlFor="customerName">Customer Name</Label>
+                  <Input
+                    id="customerName"
+                    value={customerName}
+                    onChange={(e) => setCustomerName(e.target.value)}
+                    className="mt-1"
+                    placeholder="Enter name"
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="customerContact">Contact Number</Label>
+                  <Input
+                    id="customerContact"
+                    value={customerContact}
+                    onChange={(e) => setCustomerContact(e.target.value)}
+                    className="mt-1"
+                    placeholder="Enter contact"
+                  />
+                </div>
+              </div>
+              
+              {orderType === 'delivery' && (
+                <div>
+                  <Label htmlFor="deliveryAddress">Delivery Address</Label>
+                  <Input
+                    id="deliveryAddress"
+                    value={deliveryAddress}
+                    onChange={(e) => setDeliveryAddress(e.target.value)}
+                    className="mt-1"
+                    placeholder="Enter full address"
+                  />
+                </div>
+              )}
+
+              <div>
+                <Label htmlFor="discount">Discount (%)</Label>
+                <Input
+                  id="discount"
+                  type="number"
+                  min="0"
+                  max="100"
+                  value={discount}
+                  onChange={(e) => setDiscount(Math.min(100, Math.max(0, parseInt(e.target.value) || 0)))}
+                  className="mt-1"
+                />
+              </div>
+            </div>
+          )}
 
           <div>
             <Label className="mb-2 block">Search Items</Label>
@@ -242,7 +359,7 @@ export function OrderSheet({ open, onClose, order }: OrderSheetProps) {
               <TabsContent value={selectedCategory} className="mt-4">
                 <div className="grid gap-3 sm:grid-cols-2">
                   {filteredItems.map((item) => (
-                    <Card
+                     <Card
                       key={item.id}
                       className="p-3 cursor-pointer hover:shadow-md transition-shadow"
                       onClick={() => addItem(item)}
@@ -256,7 +373,12 @@ export function OrderSheet({ open, onClose, order }: OrderSheetProps) {
                           />
                         )}
                         <div className="flex-1 min-w-0">
-                          <h4 className="font-semibold text-sm truncate">{item.name}</h4>
+                          <div className="flex items-center gap-2">
+                            <h4 className="font-semibold text-sm truncate">{item.name}</h4>
+                            {item.isDeal && (
+                              <Badge className="bg-accent text-white text-xs px-1 py-0">Deal</Badge>
+                            )}
+                          </div>
                           {item.subCategory && (
                             <Badge variant="secondary" className="text-xs mt-1">
                               {item.subCategory}
@@ -319,8 +441,18 @@ export function OrderSheet({ open, onClose, order }: OrderSheetProps) {
                 ))}
               </div>
 
-              <div className="mt-4 pt-4 border-t">
-                <div className="flex justify-between items-center text-xl font-bold">
+              <div className="mt-4 pt-4 border-t space-y-2">
+                <div className="flex justify-between items-center text-sm">
+                  <span className="text-muted-foreground">Subtotal</span>
+                  <span>PKR {calculateSubtotal().toFixed(0)}</span>
+                </div>
+                {discount > 0 && (
+                  <div className="flex justify-between items-center text-sm text-accent">
+                    <span>Discount ({discount}%)</span>
+                    <span>- PKR {((calculateSubtotal() * discount) / 100).toFixed(0)}</span>
+                  </div>
+                )}
+                <div className="flex justify-between items-center text-xl font-bold pt-2 border-t">
                   <span>Total</span>
                   <span className="text-accent">PKR {calculateTotal().toFixed(0)}</span>
                 </div>
